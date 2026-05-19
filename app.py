@@ -35,7 +35,7 @@ st.markdown("---")
 
 # Configure the Free Gemini API
 # --- REMEMBER TO CHANGE THIS KEY ---
-GEMINI_API_KEY = "AIzaSyAdcrtWdnD6mbRvVuM0NSpA0dSsmxiIYOI"
+GEMINI_API_KEY = "AIzaSyCf9waQjr7PlIB5XgNrfBVbxskEIxE8s1I"
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-pro')
 
@@ -68,8 +68,8 @@ with col_input:
 with col_output:
     if generate_clicked:
         if subject and topic:
-            if GEMINI_API_KEY == "AIzaSyAdcrtWdnD6mbRvVuM0NSpA0dSsmxiIYOI":
-                st.error("⚠️ Please replace 'AIzaSyAdcrtWdnD6mbRvVuM0NSpA0dSsmxiIYOI' in the code with your actual Google AI Studio API Key!")
+            if GEMINI_API_KEY == "AIzaSyCf9waQjr7PlIB5XgNrfBVbxskEIxE8s1I":
+                st.error("⚠️ Please replace 'AIzaSyCf9waQjr7PlIB5XgNrfBVbxskEIxE8s1I' in the code with your actual Google AI Studio API Key!")
             else:
                 with st.spinner("Manugturo is processing your selected template guidelines..."):
                     
