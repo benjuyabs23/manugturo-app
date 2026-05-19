@@ -37,7 +37,7 @@ st.markdown("---")
 # --- REMEMBER TO CHANGE THIS KEY ---
 GEMINI_API_KEY = "AIzaSyCf9waQjr7PlIB5XgNrfBVbxskEIxE8s1I"
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # SIDE-BY-SIDE LAYOUT (1/3 Width Inputs, 2/3 Width Document View)
 col_input, col_output = st.columns([1, 2])
