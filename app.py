@@ -33,11 +33,15 @@ st.title("MANUGTURO Lesson Planner")
 st.markdown("##### *Click. Generate. Teach. Custom lessons made easy for FREE...! Developed for DepEd Teachers*")
 st.markdown("---")
 
-# Configure the Free Gemini API
-# --- REMEMBER TO CHANGE THIS KEY ---
-GEMINI_API_KEY = "AIzaSyCf9waQjr7PlIB5XgNrfBVbxskEIxE8s1I"
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+# Secure API Configuration using Streamlit Secrets
+try:
+    GEMINI_API_KEY = st.secrets["GEMINI_KEY"]
+    genai.configure(api_key=GEMINI_API_KEY)
+    # Using the updated, working free-tier flash model
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    secrets_configured = True
+except Exception as e:
+    secrets_configured = False
 
 # SIDE-BY-SIDE LAYOUT (1/3 Width Inputs, 2/3 Width Document View)
 col_input, col_output = st.columns([1, 2])
@@ -51,7 +55,7 @@ with col_input:
     topic = st.text_input("3. Topic: *", placeholder="Specify your Topic and Objectives here")
     criteria = st.text_area("4. Additional Criteria / Instructions:", placeholder="You can specify additional criteria or specific instructions here (e.g., Student & Teacher Activity setup)...")
     
-    # Matching your exact 4 Dropdown items from colTemplates
+    # Your exact 4 Dropdown items from your colTemplates collection
     template_choice = st.selectbox(
         "5. Lesson Plan Template: *", 
         [
@@ -67,110 +71,144 @@ with col_input:
 # RIGHT PANEL: GENERATOR ENGINE
 with col_output:
     if generate_clicked:
-        if subject and topic:
-            if GEMINI_API_KEY == "AIzaSyCf9waQjr7PlIB5XgNrfBVbxskEIxE8s1I":
-                st.error("⚠️ Please replace 'AIzaSyCf9waQjr7PlIB5XgNrfBVbxskEIxE8s1I' in the code with your actual Google AI Studio API Key!")
-            else:
-                with st.spinner("Manugturo is processing your selected template guidelines..."):
+        if not secrets_configured:
+            st.error("⚠️ Setup Error: 'GEMINI_KEY' is missing from your Streamlit App Advanced Settings Dashboard Secrets box!")
+        elif subject and topic:
+            with st.spinner("Manugturo is processing your selected template guidelines..."):
+                
+                # --- DYNAMIC RULES CONTEXT INJECTION FROM YOUR COLTEMPLATES ---
+                if template_choice == "1-Session ILAW Framework (D.O. 9 s. 2026)":
+                    template_rules = """
+                    Your task is to generate a highly professional and effective Lesson Plan using the ILAW Framework, following the DepEd Order 9, series of 2026 trimester guidelines and adhere to the Intentions, Learning Experience, Assessment and Ways Forward (ILAW) Framework and its Learning Design Principles (Clear Goals and Teaching, Active Retrieval and Spacing, Self-awareness and Metacognition, Scaffolding, Purpose & Values Integration, Inclusion, Checks for Understanding, and Social Learning).  
                     
-                    # --- DYNAMIC RULES CONTEXT INJECTION ---
-                    if template_choice == "1-Session ILAW Framework (D.O. 9 s. 2026)":
-                        template_rules = """
-                        
-                        Your task is to generate a highly professional and effective Lesson Plan using the ILAW Framework, following the DepEd Order 9, series of 2026 trimester guidelines and adhere to the Intentions, Learning Experience, Assessment and Ways Forward (ILAW) Framework and its Learning Design Principles (Clear Goals and Teaching, Active Retrieval and Spacing, Self-awareness and Metacognition, Scaffolding, Purpose & Values Integration, Inclusion, Checks for Understanding, and Social Learning).  
-                        
-                        Structure the output according to these four pillars (display these four pillars on the output):
-                        - 1. INTENTIONS: Learning Competency and Curriculum Standards, Learning Objectives (Cognitive, Psychomotor, Affective), Learner Context (strengths, interests, barriers like visual impairments, fine motor difficulties, reading levels).
-                        - 2. LEARNING EXPERIENCE: Pre-lesson well-being activity, Flow (applying Clear goals, Scaffolding, Mastery tracking, Connection to past competencies, Collaboration/Reflection), Learning Resources (with explicit Emergency Alternatives), Opportunities for Integration.
-                        - 3. ASSESSMENT: Formative Assessment (2-3 tasks), Accommodations (visual, auditory, or group-based variations for equity).
-                        - 4. WAYS FORWARD: Extended Learning (home activity), Reflections (2 questions for the teacher).
-                        - 5. DECLARATION OF AI USE: Include a statement citing how AI was used in the formulation of this plan.
-                        
-                        CRITICAL: Use an HTML <table> with borders for all grids and matrixes where data is structured.
-                        """
-                        
-                    elif template_choice == "4-Sessions ILAW Framework (D.O. 9 s. 2026)":
-                        template_rules = """
-                        Your task is to generate a highly professional and effective 4-session Lesson Plan using the ILAW Framework, following the DepEd Order 9, series of 2026 trimester guidelines and adhere to the Intentions, Learning Experience, Assessment and Ways Forward (ILAW) Framework and its Learning Design Principles.  
-                        
-                        Structure the output according to these four pillars across a 4-Session Matrix:
-                        - 1. INTENTIONS: Competency/Curriculum Standards. Learning Objectives (Create a 4-Session HTML Grid Table: Rows = Cognitive, Psychomotor, Affective; Columns = Session 1-4). Learner Context (Create a 4-Session Grid Table: Columns = Session 1-4 describing classroom barriers).
-                        - 2. LEARNING EXPERIENCE: Create a 4-Session HTML Grid Table with Columns = Session 1-4 containing Pre-Lesson tasks, Scaffolded Flow, Inclusive Resources (with Emergency Alternatives), and Integrations.
-                        - 3. ASSESSMENT: Create a 4-Session HTML Grid Table with Columns = Session 1-4 containing Formative Assessment tasks and Accommodations.
-                        - 4. WAYS FORWARD: Create a 4-Session HTML Grid Table with Columns = Session 1-4 containing Extended Learning and 2 Teacher Reflections.
-                        - 5. DECLARATION OF AI USE: Include a statement citing how AI was used in the formulation of this plan.
-                        
-                        CRITICAL: Use beautifully styled, bordered HTML <table> grids to separate Session 1, Session 2, Session 3, and Session 4 contents for every section as requested.
-                        """
-                        
-                    elif template_choice == "4A's Format":
-                        template_rules = """
-                        Create a detailed, learner-centered, and classroom-ready 4A's lesson plan following the 4A's instructional model: Activity, Analysis, Abstraction, Application.
-                        Include:
-                        1. Objectives (Cognitive, Affective, Psychomotor)
-                        2. Subject Matter (Topic, References, Materials/Visual Aids, Subject Integrations)
-                        3. Procedure Proper (Teacher Script and Expected Learner Responses for each):
-                           - A. Activity: Motivational/interactive task
-                           - B. Analysis: Processing/Critical-thinking questions
-                           - C. Abstraction: Generalization and key concepts summarized
-                           - D. Application: Real-life application activity or situational group work
-                        4. Differentiated Instructions and Activities: Explicitly separate strategies for Advanced/Fast Learners (Enrichment), Average Learners (Guided practice), Struggling Learners (Scaffolded support), and Learners with Special Educational Needs (Modified activities, visual supports, peer buddy). Differentiate based on content, process, product, pacing, and grouping.
-                        5. Assessment: Formative task, performance task, or exit ticket with a rubric/scoring guide.
-                        6. Assignment/Homework connected to the lesson.
-                        Ensure suggested teacher scripts and potential student responses are embedded throughout.
-                        """
-                        
-                    elif template_choice == "5E's Format":
-                        template_rules = """
-                        Create a detailed, learner-centered, and classroom-ready 5E's lesson plan following the 5E Instructional Model: Engage, Explore, Explain, Elaborate, Evaluate.
-                        Include: Learning Competencies/Objectives, Content Standards, Performance Standards, MELCs (if applicable), Subject/Values Integration, Materials, ICT Integration, and Classroom Management Strategies.
-                        
-                        For each phase (Engage, Explore, Explain, Elaborate, Evaluate), provide an structured breakdown displaying:
-                        - Teacher's Activities
-                        - Learners' Activities
-                        - Guide Questions & Expected Responses
-                        - Time Allotment
-                        
-                        Add differentiated instruction targets for Fast, Average, Struggling, and Special Educational Needs learners. Include formative assessments, performance tasks, and reflection rubrics in the Evaluate phase.
-                        """
+                    Structure the output according to these four pillars (display this four pillars on the output):
                     
-                    # Consolidating user runtime metadata and targeted prompt rules
-                    master_prompt = f"""
-                    SYSTEM INSTRUCTION: You are a Master Teacher and Senior Curriculum Designer for the Department of Education (DepEd) in the Philippines. 
-                    Generate an exceptional, ready-to-print lesson plan file matching the exact template layout rules provided.
+                    ### 1. INTENTIONS
+                    * Learning Competency and Curriculum Standards: Write the competency/ies from the curriculum guide that we are targeting, and the content or performance standards applicable to the sessions.
+                    * Learning Objectives: Provide specific objectives for Cognitive, Psychomotor, and Affective domains.
+                    * Learner Context: Describe a realistic classroom context including common learner strengths, interests, and potential barriers to learning (e.g., visual impairments, fine motor difficulties, or varying reading levels).
                     
-                    USER INPUT METADATA:
-                    - Targeted Grade Level: {grade}
-                    - Subject / Learning Area: {subject}
-                    - Core Topic / Lesson Title: {topic}
-                    - User Custom Instructions: {criteria}
+                    ### 2. LEARNING EXPERIENCE
+                    * Pre-Lesson: Describe a (get ready) activity that checks well-being and hooks interest.
+                    * Flow: Design a (journey) of activities that purposefully apply the Learning Design Principles: Make objectives clear to learners, provide scaffolding (guide them before letting them try alone), check mastery/understanding/well-being, connect concepts to past competencies, and encourage collaboration/reflection.
+                    * Learning Resources: List inclusive resources and provide (Emergency Alternatives) (e.g., If no internet, use printed diagrams).
+                    * Opportunities for Integration: Suggest a meaningful connection to another subject or technology.
                     
-                    TEMPLATE RUNTIME RULES:
-                    {template_rules}
+                    ### 3. ASSESSMENT
+                    * Formative Assessment: Design 2-3 tasks or questions to gather feedback during the lesson.
+                    * Accommodations: Provide specific ways (visual, auditory, or group-based) for learners with different abilities to demonstrate their understanding.
                     
-                    Ensure high pedagogical standards, age-appropriate language, and clear structural separation.
+                    ### 4. WAYS FORWARD
+                    * Extended Learning: Suggest an activity learners can do at home to spark curiosity or reinforce mastery.
+                    * Reflections: Provide 2 reflective questions for the teacher to ponder after the session.
+                    
+                    ### 5. DECLARATION OF AI USE
+                    * Include a statement citing how AI was used in the formulation of this plan.
+                    
+                    Use an HTML <table> with borders for all grids and matrixes where numerical or structured tracking content applies.
                     """
                     
-                    try:
-                        response = model.generate_content(master_prompt)
-                        st.success(f"✨ Finalized {template_choice} Draft Rendered Successfully!")
-                        st.markdown("---")
-                        
-                        # Displays the output inside the paper container
-                        st.markdown(response.text, unsafe_allow_html=True)
-                        
-                        st.markdown("---")
-                        st.download_button(
-                            label="📥 Download Structured Lesson Plan (.txt)",
-                            data=response.text,
-                            file_name=f"{template_choice.replace(' ', '_')}_{topic.replace(' ', '_')}.txt",
-                            mime="text/plain",
-                            use_container_width=True
-                        )
-                    except Exception as e:
-                        st.error(f"AI Generation Fault: {e}")
+                elif template_choice == "4-Sessions ILAW Framework (D.O. 9 s. 2026)":
+                    template_rules = """
+                    Your task is to generate a highly professional and effective 4-session Lesson Plan using the ILAW Framework, following the DepEd Order 9, series of 2026 trimester guidelines and adhere to the Intentions, Learning Experience, Assessment and Ways Forward (ILAW) Framework and its Learning Design Principles.  
+                    
+                    Structure the output according to these four pillars (display this four pillars on the output):
+                    
+                    ### 1. INTENTIONS
+                    * Learning Competency and Curriculum Standards: Write the competency/ies from the curriculum guide targeting the session block.
+                    * Learning Objectives: (START 4-Session Grid, ROWS = Cognitive, Psychomotor, and Affective, COLUMNS = Session Number): Provide specific objectives across 4-sessions using an HTML table.
+                    * Learner Context: (START 4-Session Grid, COLUMNS = Session Number): Describe realistic classroom contexts and barriers across 4-sessions using an HTML table.
+                    
+                    ### 2. LEARNING EXPERIENCE
+                    (START 4-Session Grid, COLUMNS = Session Number inside an HTML table layout for all below fields):
+                    * Pre-Lesson: Describe a (get ready) activity that checks well-being and hooks interest across 4-sessions.
+                    * Flow: Design a (journey) of activities that purposefully apply the Learning Design Principles across 4-sessions.
+                    * Learning Resources: List inclusive resources and provide (Emergency Alternatives) across 4-sessions.
+                    * Opportunities for Integration: Suggest meaningful connections across 4-sessions.
+                    
+                    ### 3. ASSESSMENT
+                    (START 4-Session Grid, COLUMNS = Session Number inside an HTML table):
+                    * Formative Assessment: Design 2-3 tasks or questions to gather feedback across 4-sessions.
+                    * Accommodations: Provide specific ways for unique abilities across 4-sessions.
+                    
+                    ### 4. WAYS FORWARD
+                    (START 4-Session Grid, COLUMNS = Session Number inside an HTML table):
+                    * Extended Learning: Suggest an activity learners can do at home across 4-sessions.
+                    * Reflections: Provide 2 reflective questions across 4-sessions.
+                    
+                    ### 5. DECLARATION OF AI USE
+                    * Include a statement citing how AI was used in the formulation of this plan.
+                    
+                    Use an HTML <table> with borders for all grids to organize Session 1, Session 2, Session 3, and Session 4.
+                    """
+                    
+                elif template_choice == "4A's Format":
+                    template_rules = """
+                    Create a detailed, learner-centered, and classroom-ready 4A's lesson plan following the 4A's instructional model: Activity, Analysis, Abstraction, Application.
+                    
+                    Include the following components:
+                    1. Objectives: Cognitive, Affective, and Psychomotor objectives.
+                    2. Subject Matter: Topic, References, Materials/Visual Aids, Subject Integrations.
+                    3. Procedure Proper (4A's) - Write full suggested teacher scripts and expected student responses:
+                       - A. Activity: Motivational/review activity and collaborative student task.
+                       - B. Analysis: Processing questions, guided discussion, critical-thinking inquiries.
+                       - C. Abstraction: Generalization of the lesson, key concepts, simplified definitions.
+                       - D. Application: Real-life application activity, group work, or situational tasks.
+                    4. Differentiated Instructions and Activities: Provide separate clear blocks for: Advanced/Fast Learners (Enrichment), Average Learners (Guided practice), Struggling Learners (Scaffolded tasks), and Special Educational Needs (Modified activities, peer supports). Differentiate based on content, process, product, pacing, and grouping.
+                    5. Assessment: Formative test, performance evaluation, or exit ticket with rubrics.
+                    6. Assignment/Homework.
+                    """
+                    
+                elif template_choice == "5E's Format":
+                    template_rules = """
+                    Create a detailed, learner-centered, and classroom-ready 5E's lesson plan following the 5E Instructional Model: Engage, Explore, Explain, Elaborate, Evaluate.
+                    
+                    Include: Learning Competencies/Objectives, Content Standards, Performance Standards, MELCs, Subject/Values Integration, Materials, ICT Integration, and Classroom Management Strategies.
+                    
+                    For each phase of the 5E model, explicitly map out details for:
+                    - Teacher's Activities & Scripts
+                    - Learners' Activities & Expected Responses
+                    - Guide Questions & Time Allotments
+                    
+                    Add differentiated instruction strategies for Fast, Average, Struggling, and LSEN learners. In the Evaluate section, display formal formative tasks, rubrics, performance tasks, and reflection elements.
+                    """
+                
+                # Consolidation prompt mapping engine
+                master_prompt = f"""
+                SYSTEM SETTING: You are an expert Master Teacher and Curriculum Evaluator for the Department of Education (DepEd) in the Philippines.
+                Generate a ready-to-use, print-compliant lesson plan matching the following metadata inputs.
+                
+                METADATA DETAILS:
+                - Target Grade: {grade}
+                - Content Domain / Subject Area: {subject}
+                - Lesson Focus Title: {topic}
+                - Extra Teacher Request criteria: {criteria}
+                
+                SPECIFIC TEMPLATE CONFIGURATION PROMPT TO FOLLOW:
+                {template_rules}
+                
+                Generate high-quality output. If HTML tables are requested, output clear raw tables that parse smoothly into markup views.
+                """
+                
+                try:
+                    response = model.generate_content(master_prompt)
+                    st.success(f"✨ Finalized {template_choice} Draft Generated!")
+                    st.markdown("---")
+                    
+                    # Renders output onto paper canvas container safely
+                    st.markdown(response.text, unsafe_allow_html=True)
+                    
+                    st.markdown("---")
+                    st.download_button(
+                        label="📥 Download Clean Lesson Plan Document (.txt)",
+                        data=response.text,
+                        file_name=f"{template_choice.replace(' ', '_')}_{topic.replace(' ', '_')}.txt",
+                        mime="text/plain",
+                        use_container_width=True
+                    )
+                except Exception as e:
+                    st.error(f"AI System Processing Exception Error: {e}")
         else:
-            st.error("⚠️ Validation Error: Please input both a Subject Area and Lesson Topic on the left configuration panel.")
-    else:
-        # Initial paper preview screen matching your design layout state
-        st.info("💡 Input configuration details into the left panel container, select your structural framework blueprint, and click 'Generate Lesson Plan' to output the complete pedagogical matrix here.")
+            st.error("⚠️ Form Validation: Please fill out both the Subject Area and Topic fields to activate.")
+else:
+    st.info("💡 Complete input setup details inside the left configuration card container and click 'Generate Lesson Plan' to render your master curriculum draft sheet layout here.")
